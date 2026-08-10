@@ -1,0 +1,155 @@
+// Frontdesk data model.
+//
+// `url` points at the Supabase transaction pooler (PgBouncer, port 6543) because
+// serverless functions open a connection per invocation and would otherwise
+// exhaust Postgres. `directUrl` uses the session pooler (5432), which Prisma
+// Migrate needs for advisory locks and DDL.
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Organization {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(120)
+  /// Throwaway workspace handed to a demo visitor, reaped after a day.
+  isDemo    Boolean  @default(false) @map("is_demo")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  users    User[]
+  tickets  Ticket[]
+  llmCalls LlmCall[]
+
+  @@index([isDemo, createdAt])
+  @@map("organizations")
+}
+
+model User {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  email          String   @unique @db.VarChar(255)
+  passwordHash   String   @map("password_hash") @db.VarChar(255)
+  name           String   @db.VarChar(120)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  /// Brute-force protection, counted in the database rather than in memory:
+  /// each serverless invocation may run in a different instance, so an
+  /// in-process counter is one cold start away from being reset.
+  failedLogins Int       @default(0) @map("failed_logins")
+  lockedUntil  DateTime? @map("locked_until") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("users")
+}
+
+/// An inbound support message. Stored verbatim before anything looks at it, so
+/// a bug in triage can never cost us the original.
+model Ticket {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  senderName     String   @map("sender_name") @db.VarChar(160)
+  senderEmail    String   @map("sender_email") @db.VarChar(255)
+  subject        String   @db.VarChar(300)
+  body           String   @db.Text
+  channel        String   @db.VarChar(24)
+  receivedAt     DateTime @map("received_at") @db.Timestamptz(6)
+  /// new | triaged | replied | closed
+  status         String   @default("new") @db.VarChar(24)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  triage       Triage?
+  draft        Draft?
+  llmCalls     LlmCall[]
+
+  @@index([organizationId, receivedAt(sort: Desc)])
+  @@index([organizationId, status])
+  @@map("tickets")
+}
+
+/// The accepted classification for a ticket. Separate from LlmCall because a
+/// triage may be the result of several attempts, and only the outcome belongs
+/// on the ticket.
+model Triage {
+  id            String   @id @default(uuid()) @db.Uuid
+  ticketId      String   @unique @map("ticket_id") @db.Uuid
+  /// Constrained to a fixed set by a CHECK constraint. The model happily
+  /// invents synonyms — "billing" one call, "billing_and_payments" the next —
+  /// and a free-text column would quietly fill up with both.
+  category      String   @db.VarChar(32)
+  priority      String   @db.VarChar(16)
+  summary       String   @db.Text
+  /// The model's own confidence, used to route low-confidence work to a human
+  /// rather than to pretend the answer is good.
+  confidence    Float
+  promptVersion String   @map("prompt_version") @db.VarChar(16)
+  /// How many attempts the classification took, including repairs.
+  attempts      Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("triages")
+}
+
+model Draft {
+  id         String    @id @default(uuid()) @db.Uuid
+  ticketId   String    @unique @map("ticket_id") @db.Uuid
+  body       String    @db.Text
+  /// Set when a human accepts it; an unapproved draft is never sent.
+  approvedAt DateTime? @map("approved_at") @db.Timestamptz(6)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("drafts")
+}
+
+/// Every attempt against the model, successful or not. This is what makes the
+/// cost panel and the retry timeline real rather than decorative: retries,
+/// schema repairs and outright failures each leave a row.
+model LlmCall {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  ticketId       String?  @map("ticket_id") @db.Uuid
+  purpose        String   @db.VarChar(24)
+  provider       String   @db.VarChar(32)
+  model          String   @db.VarChar(64)
+  promptVersion  String   @map("prompt_version") @db.VarChar(16)
+  attempt        Int      @default(1)
+  /// ok | invalid_output | rate_limited | timeout | upstream_error
+  outcome        String   @db.VarChar(24)
+  /// Hash of the prompt input. A repeat of the same input is served from an
+  /// earlier row instead of being paid for twice.
+  inputHash      String   @map("input_hash") @db.VarChar(64)
+  cacheHit       Boolean  @default(false) @map("cache_hit")
+  inputTokens    Int      @default(0) @map("input_tokens")
+  outputTokens   Int      @default(0) @map("output_tokens")
+  /// Cost in millionths of a dollar. Integers, because floating point money is
+  /// a bug waiting for a rounding edge case.
+  costMicros     Int      @default(0) @map("cost_micros")
+  latencyMs      Int      @default(0) @map("latency_ms")
+  ttfbMs         Int?     @map("ttfb_ms")
+  /// The raw text the model returned. Kept so a cache hit can replay an answer
+  /// that was already paid for, and so a bad classification can be read back
+  /// exactly as it arrived rather than reconstructed from the parsed result.
+  response       String?  @db.Text
+  error          String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  ticket       Ticket?      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([organizationId, inputHash])
+  @@map("llm_calls")
+}
