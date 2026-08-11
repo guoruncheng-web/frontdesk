@@ -159,6 +159,17 @@ pnpm dev                  # http://localhost:3000
 Any OpenAI-compatible endpoint works. Point `LLM_BASE_URL`, `LLM_MODEL` and the
 two price variables at whichever provider you have a key for.
 
+## Deployment
+
+Both packages are Vercel projects on this repository — `web` and `server` are
+their respective root directories — and a push to `main` deploys them. Each one
+skips its build when the push did not touch its directory, so a change to the
+console does not redeploy the API.
+
+The API runs as a single function behind a rewrite, with a daily cron on
+`/api/health`: the database is a free Supabase project, which pauses after a
+week of inactivity, and a paused demo greets a visitor with a 500.
+
 ## Tests
 
 ```bash
