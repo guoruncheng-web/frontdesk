@@ -884,3 +884,85 @@ button {
     display: none;
   }
 }
+
+/* ----------------------------------------------------------------- tour -- */
+
+.tour {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+/*
+ * The scrim is the hole, not the cover: an enormous spread shadow darkens
+ * everything outside the highlighted element, so one element does the work of
+ * four panels and never leaves a seam between them as the target moves.
+ */
+.tour-scrim {
+  position: fixed;
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 9999px rgba(7, 11, 15, 0.76);
+  outline: 1px solid var(--accent);
+  outline-offset: 0;
+  transition: all 0.18s ease;
+  pointer-events: auto;
+}
+
+.tour-card {
+  position: fixed;
+  width: 340px;
+  max-width: calc(100vw - 28px);
+  padding: var(--s4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+}
+
+.tour-card:focus {
+  outline: none;
+}
+
+.tour-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--s2);
+}
+
+.tour-skip {
+  height: 24px;
+  padding: 0 6px;
+  border-color: transparent;
+}
+
+.tour-card h3 {
+  margin: 0 0 var(--s2);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.tour-card p {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.tour-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s2);
+  margin-top: var(--s4);
+}
+
+@media (max-width: 720px) {
+  /* There is no useful "beside" on a phone, so the card takes the bottom of
+     the screen and the highlight keeps its own place on the page. */
+  .tour-card {
+    top: auto !important;
+    bottom: var(--s3) !important;
+    left: var(--s3) !important;
+    right: var(--s3);
+    width: auto;
+  }
+}

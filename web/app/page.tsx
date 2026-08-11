@@ -3,10 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Inbox, Loader2, LogOut, Zap } from "lucide-react";
+import { HelpCircle, Inbox, Loader2, LogOut, Zap } from "lucide-react";
 import { Ticket, Usage, api, dollars } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { TicketDetailPanel } from "@/components/ticket-detail";
+import { Tour, shouldOfferTour } from "@/components/tour";
 
 export default function ConsolePage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ function Console({
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [triagingAll, setTriagingAll] = useState(false);
+  const [touring, setTouring] = useState(false);
 
   const tickets = useQuery({ queryKey: ["tickets"], queryFn: () => api<Ticket[]>("/tickets") });
   const usage = useQuery({ queryKey: ["usage"], queryFn: () => api<Usage>("/usage") });
@@ -55,6 +57,12 @@ function Console({
   useEffect(() => {
     if (!selectedId && rows.length) setSelectedId(rows[0].id);
   }, [rows, selectedId]);
+
+  // Offered only once the inbox has actually rendered — a walkthrough pointing
+  // at controls that are still loading points at nothing.
+  useEffect(() => {
+    if (selectedId && shouldOfferTour()) setTouring(true);
+  }, [selectedId]);
 
   /**
    * Triages the untriaged tickets one after another rather than all at once.
@@ -90,7 +98,11 @@ function Console({
         <div className="topbar-spacer" />
 
         {usage.data && (
-          <span className="workspace mono" title="Spent on model calls in this workspace">
+          <span
+            className="workspace mono"
+            data-tour="meter"
+            title="Spent on model calls in this workspace"
+          >
             {dollars(usage.data.spentMicros)} · {usage.data.calls} calls
           </span>
         )}
@@ -100,13 +112,22 @@ function Console({
           {user.organizationName}
         </span>
 
+        <button
+          className="ghost"
+          onClick={() => setTouring(true)}
+          title="Show me around"
+          aria-label="Show me around"
+        >
+          <HelpCircle size={14} />
+        </button>
+
         <button className="ghost" onClick={onSignOut} title="Sign out" aria-label="Sign out">
           <LogOut size={14} />
         </button>
       </header>
 
       <aside className="queue">
-        <div className="queue-head">
+        <div className="queue-head" data-tour="queue">
           <p className="label">Inbox</p>
           <h2>
             {rows.length} tickets
@@ -162,6 +183,8 @@ function Console({
           </div>
         )}
       </main>
+
+      {touring && <Tour onFinished={() => setTouring(false)} />}
     </div>
   );
 }

@@ -157,7 +157,12 @@ export function TicketDetailPanel({
               ))}
             </select>
 
-            <select value={fault} onChange={(e) => setFault(e.target.value)} aria-label="Inject a fault">
+            <select
+              value={fault}
+              onChange={(e) => setFault(e.target.value)}
+              aria-label="Inject a fault"
+              data-tour="fault"
+            >
               {FAULTS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -165,7 +170,7 @@ export function TicketDetailPanel({
               ))}
             </select>
 
-            <label className="ghost" style={{ cursor: "pointer" }}>
+            <label className="ghost" style={{ cursor: "pointer" }} data-tour="cache">
               <input
                 type="checkbox"
                 checked={noCache}
@@ -175,7 +180,12 @@ export function TicketDetailPanel({
               Skip cache
             </label>
 
-            <button className="primary" onClick={runTriage} disabled={running !== null}>
+            <button
+              className="primary"
+              onClick={runTriage}
+              disabled={running !== null}
+              data-tour="classify"
+            >
               {running === "triage" ? <Loader2 size={14} className="spin" /> : <Zap size={14} />}
               {running === "triage" ? "Classifying…" : "Classify"}
             </button>
@@ -258,7 +268,7 @@ export function TicketDetailPanel({
               setApproved(false);
             }}
           />
-          <div className="draft-actions">
+          <div className="draft-actions" data-tour="draft">
             <button className="ghost" onClick={runDraft} disabled={running !== null}>
               {running === "draft" ? <Loader2 size={14} className="spin" /> : <PenLine size={14} />}
               {draft ? "Rewrite" : "Draft a reply"}
