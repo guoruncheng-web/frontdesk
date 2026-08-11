@@ -855,4 +855,25 @@ button {
   .detail {
     padding: var(--s4);
   }
+
+  /*
+   * A grid item's default `min-width: auto` is the width of its content, so the
+   * top bar's chips were widening the single column past the viewport and
+   * taking the whole page into a horizontal scroll. Letting the row shrink,
+   * and keeping each chip on one line, holds the page at the screen's width.
+   */
+  .console > * {
+    min-width: 0;
+  }
+  .topbar {
+    gap: var(--s2);
+    padding: 0 var(--s3);
+  }
+  .workspace {
+    padding: 4px var(--s2);
+    font-size: 11.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
