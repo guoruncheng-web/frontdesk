@@ -873,7 +873,14 @@ button {
     padding: 4px var(--s2);
     font-size: 11.5px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  }
+  /*
+   * With both chips on the bar there is not enough room for either, and half a
+   * word behind a clipped edge looks broken. The workspace name is the one to
+   * drop: the visitor knows whose workspace they are in, and the spend meter is
+   * the thing they came to watch move.
+   */
+  .workspace:not(.mono) {
+    display: none;
   }
 }
