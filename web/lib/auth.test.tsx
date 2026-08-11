@@ -38,6 +38,35 @@ function mount() {
   return client;
 }
 
+describe("restoring a stored session", () => {
+  it("keeps the token when the check fails for a reason other than a rejected session", async () => {
+    window.localStorage.setItem("frontdesk.token", "a-valid-token");
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response("upstream is warming up", { status: 503 }))
+      .mockResolvedValue(
+        Response.json({ id: "u1", name: "Sam", email: "s@example.com", organizationId: "org-1", organizationName: "Org One" }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    mount();
+
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("authenticated"));
+    expect(window.localStorage.getItem("frontdesk.token")).toBe("a-valid-token");
+  });
+
+  it("discards it on a 401, which is the one answer that means the session is gone", async () => {
+    window.localStorage.setItem("frontdesk.token", "an-expired-token");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("nope", { status: 401 })));
+
+    mount();
+
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("anonymous"));
+    expect(window.localStorage.getItem("frontdesk.token")).toBeNull();
+  });
+});
+
 describe("AuthProvider", () => {
   it("forgets the cached workspace on sign-out", async () => {
     const client = mount();

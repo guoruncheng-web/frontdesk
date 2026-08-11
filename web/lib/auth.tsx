@@ -32,17 +32,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     let cancelled = false;
 
-    api<AuthUser>("/auth/me")
-      .then((me) => {
+    const verify = async () => {
+      try {
+        const me = await api<AuthUser>("/auth/me");
+        if (!cancelled) {
+          setUser(me);
+          setStatus("authenticated");
+        }
+        return;
+      } catch (error) {
         if (cancelled) return;
-        setUser(me);
-        setStatus("authenticated");
-      })
-      .catch(() => {
+
+        // Only a 401 means the session is actually gone. A cold start, a
+        // dropped connection or a 500 says nothing about the token, and
+        // discarding it there costs a demo visitor the workspace they were
+        // working in — for a blip that a second request usually survives.
+        if (isUnauthorized(error)) {
+          tokenStore.clear();
+          setStatus("anonymous");
+          return;
+        }
+      }
+
+      try {
+        const me = await api<AuthUser>("/auth/me");
+        if (!cancelled) {
+          setUser(me);
+          setStatus("authenticated");
+        }
+      } catch (error) {
         if (cancelled) return;
-        tokenStore.clear();
+        // Still unverifiable: the token stays, so a reload can try again.
+        if (isUnauthorized(error)) tokenStore.clear();
         setStatus("anonymous");
-      });
+      }
+    };
+
+    void verify();
 
     return () => {
       cancelled = true;
