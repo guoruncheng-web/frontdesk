@@ -174,10 +174,21 @@ week of inactivity, and a paused demo greets a visitor with a 500.
 
 ```bash
 cd server && pnpm test        # 31 unit tests
-cd web    && pnpm test        # 10 unit tests
+cd web    && pnpm test        # 12 unit tests
 ```
 
-The suites concentrate on the parts that fail quietly: an SSE event split across
+Against a running deployment there is also a smoke test, which walks the
+promises this README makes — the cache costing nothing, both faults recovering,
+the approved text being the agent's — and asserts on what comes back:
+
+```bash
+node scripts/smoke.mjs                            # production
+node scripts/smoke.mjs http://localhost:8080/api  # a local server
+```
+
+It is not in CI. Every run spends real model credit, and CI runs on every push.
+
+The unit suites concentrate on the parts that fail quietly: an SSE event split across
 chunk boundaries, a multi-byte character split mid-sequence, backoff staying
 inside its ceiling while still spreading, `retry-after` overriding the computed
 delay, invented categories being rejected, and a fenced or preambled JSON
