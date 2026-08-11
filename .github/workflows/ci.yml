@@ -36,10 +36,6 @@ jobs:
 
       - run: pnpm build
 
-      # The e2e suite is deliberately not run here: it needs a real Postgres and
-      # would either share the deployed database with every branch or require
-      # provisioning one per run. Run it locally with `pnpm test:e2e`.
-
   web:
     name: Web — tests and build
     runs-on: ubuntu-latest

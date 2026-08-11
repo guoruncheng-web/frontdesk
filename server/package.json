@@ -12,7 +12,6 @@
     "prisma:deploy": "prisma migrate deploy",
     "seed": "tsx prisma/seed.ts",
     "test": "jest --config test/jest.json",
-    "test:e2e": "jest --config test/jest-e2e.json",
     "vercel-build": "prisma generate && nest build"
   },
   "pnpm": {
