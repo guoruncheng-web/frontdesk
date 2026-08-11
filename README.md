@@ -1,5 +1,7 @@
 # Frontdesk
 
+[![CI](https://github.com/guoruncheng-web/frontdesk/actions/workflows/ci.yml/badge.svg)](https://github.com/guoruncheng-web/frontdesk/actions/workflows/ci.yml)
+
 AI triage for a support inbox. Incoming tickets are classified, given a
 priority, and answered with a draft an agent approves or rewrites. Nothing is
 sent without a person seeing it.
