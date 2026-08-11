@@ -9,7 +9,15 @@ happens when it returns malformed JSON, when the provider rate-limits you, when
 the same question is asked twice, and when someone asks what the month's bill
 will be. This demo lets you trigger each of those and watch the answer.
 
-<!-- LIVE_LINKS -->
+**[Open the live demo →](https://frontdesk-web-psi.vercel.app)**
+
+- Console — https://frontdesk-web-psi.vercel.app
+- API docs (Swagger) — https://frontdesk-api.vercel.app/api/docs
+- Health check — https://frontdesk-api.vercel.app/api/health
+
+No sign-up needed: press **Open a demo inbox** and you get a private workspace
+seeded with twelve tickets. Every classification below runs against a real model
+and a real bill.
 
 ## What you can do in the demo
 
