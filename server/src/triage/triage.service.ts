@@ -48,6 +48,7 @@ export class TriageService {
 
     let attempts = 0;
     let lastRaw = '';
+    let lastIssue: string | undefined;
 
     const parsed = await withRetry<TriageResult>(
       async (attempt) => {
@@ -64,7 +65,7 @@ export class TriageService {
                 { role: 'assistant' as const, content: lastRaw },
                 {
                   role: 'user' as const,
-                  content: `That response was rejected: ${this.lastIssue ?? 'it was not valid JSON'}. Reply again with valid JSON only, nothing else.`,
+                  content: `That response was rejected: ${lastIssue ?? 'it was not valid JSON'}. Reply again with valid JSON only, nothing else.`,
                 },
               ]
             : [
@@ -111,7 +112,7 @@ export class TriageService {
         });
 
         if (!validated.ok) {
-          this.lastIssue = validated.issue;
+          lastIssue = validated.issue;
           throw new LlmError('invalid_output', validated.issue);
         }
 
@@ -167,8 +168,6 @@ export class TriageService {
       update: { body: result.text, approvedAt: null },
     });
   }
-
-  private lastIssue: string | undefined;
 
   /**
    * Serves an identical earlier request from its recorded response.
@@ -290,7 +289,7 @@ function validate(raw: string): Validation {
 }
 
 function hashInput(system: string, user: string, provider: string): string {
-  return createHash('sha256').update(`${provider} ${system} ${user}`).digest('hex');
+  return createHash('sha256').update(`${provider}\u0000${system}\u0000${user}`).digest('hex');
 }
 
 /** Breaks the model's JSON the way a truncated stream would, for the fault demo. */

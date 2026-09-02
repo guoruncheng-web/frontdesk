@@ -173,8 +173,8 @@ week of inactivity, and a paused demo greets a visitor with a 500.
 ## Tests
 
 ```bash
-cd server && pnpm test        # 31 unit tests
-cd web    && pnpm test        # 12 unit tests
+cd server && pnpm test        # server unit suite
+cd web    && pnpm test        # web unit suite
 ```
 
 Against a running deployment there is also a smoke test, which walks the
