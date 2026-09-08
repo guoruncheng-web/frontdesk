@@ -21,7 +21,7 @@ export default function ConsolePage() {
     return (
       <div className="boot">
         <Loader2 size={18} className="spin" />
-        <p>Opening your inbox…</p>
+        <p>正在打开工单箱…</p>
       </div>
     );
   }
@@ -97,13 +97,17 @@ function Console({
 
         <div className="topbar-spacer" />
 
+        <a className="language-link" href="https://frontdesk-web-psi.vercel.app" target="_blank" rel="noreferrer">
+          English ↗
+        </a>
+
         {usage.data && (
           <span
             className="workspace mono"
             data-tour="meter"
-            title="Spent on model calls in this workspace"
+            title="当前工作空间的模型调用成本"
           >
-            {dollars(usage.data.spentMicros)} · {usage.data.calls} calls
+            {dollars(usage.data.spentMicros)} · {usage.data.calls} 次调用
           </span>
         )}
 
@@ -115,23 +119,23 @@ function Console({
         <button
           className="ghost"
           onClick={() => setTouring(true)}
-          title="Show me around"
-          aria-label="Show me around"
+          title="查看使用引导"
+          aria-label="查看使用引导"
         >
           <HelpCircle size={14} />
         </button>
 
-        <button className="ghost" onClick={onSignOut} title="Sign out" aria-label="Sign out">
+        <button className="ghost" onClick={onSignOut} title="退出登录" aria-label="退出登录">
           <LogOut size={14} />
         </button>
       </header>
 
       <aside className="queue">
         <div className="queue-head" data-tour="queue">
-          <p className="label">Inbox</p>
+          <p className="label">工单箱</p>
           <h2>
-            {rows.length} tickets
-            {untriaged.length > 0 && ` · ${untriaged.length} untriaged`}
+            {rows.length} 张工单
+            {untriaged.length > 0 && ` · ${untriaged.length} 张待分类`}
           </h2>
 
           <div className="queue-actions">
@@ -141,12 +145,12 @@ function Console({
               disabled={triagingAll || untriaged.length === 0}
             >
               {triagingAll ? <Loader2 size={14} className="spin" /> : <Zap size={14} />}
-              {triagingAll ? "Working…" : `Triage ${untriaged.length || "all"}`}
+              {triagingAll ? "处理中…" : `分类 ${untriaged.length || "全部"} 张`}
             </button>
           </div>
         </div>
 
-        {tickets.isLoading && <p className="control-note" style={{ padding: 16 }}>Loading…</p>}
+        {tickets.isLoading && <p className="control-note" style={{ padding: 16 }}>加载中…</p>}
 
         {rows.map((ticket) => (
           <button
@@ -166,7 +170,7 @@ function Console({
               {ticket.triage ? (
                 <span className={`chip ${ticket.triage.priority}`}>{ticket.triage.category}</span>
               ) : (
-                <span className="chip untriaged">untriaged</span>
+                <span className="chip untriaged">待分类</span>
               )}
             </div>
           </button>
@@ -179,7 +183,7 @@ function Console({
         ) : (
           <div className="detail-empty">
             <Inbox size={22} />
-            <p>Pick a ticket from the queue.</p>
+            <p>请从队列中选择一张工单。</p>
           </div>
         )}
       </main>
@@ -191,7 +195,7 @@ function Console({
 
 function sinceLabel(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
-  if (minutes < 60) return `${minutes}m`;
+  if (minutes < 60) return `${minutes} 分钟`;
   const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours}h` : `${Math.round(hours / 24)}d`;
+  return hours < 48 ? `${hours} 小时` : `${Math.round(hours / 24)} 天`;
 }

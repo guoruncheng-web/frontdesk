@@ -26,7 +26,7 @@ export default function LoginPage() {
       await signIn(form.email, form.password);
       router.replace("/");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Something went wrong");
+      setError(caught instanceof Error ? caught.message : "登录失败，请稍后重试");
     } finally {
       setPending(false);
     }
@@ -40,7 +40,7 @@ export default function LoginPage() {
       await startDemo();
       router.replace("/");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Could not open the demo");
+      setError(caught instanceof Error ? caught.message : "暂时无法打开演示空间");
     } finally {
       setDemoPending(false);
     }
@@ -55,37 +55,39 @@ export default function LoginPage() {
           </span>
           frontdesk
         </div>
+        <a className="language-link" href="https://frontdesk-web-psi.vercel.app" target="_blank" rel="noreferrer">
+          English version ↗
+        </a>
 
-        <h1>Every ticket read, ranked and answered before anyone opens the inbox.</h1>
+        <h1>每一张工单都能自动阅读、排序，并生成可审核的回复。</h1>
         <p>
-          Incoming messages are classified, given a priority, and answered with a draft an agent
-          approves or rewrites. Nothing is sent without a person seeing it first.
+          AI 自动识别问题类型和优先级，生成回复草稿；客服审核或改写后才会保存，绝不自动发送。
         </p>
 
         {/* Measured on the sample inbox, not estimated. A demo that quotes round
             numbers it never checked is the thing clients have been burned by. */}
         <ul className="auth-facts">
           <li>
-            <b>$0.00012</b> per ticket classified
+            每张工单分类成本约 <b>$0.00012</b>
           </li>
           <li>
-            <b>~1.0s</b> to classify, streamed as it is written
+            约 <b>1.0 秒</b>完成分类，实时流式展示
           </li>
           <li>
-            <b>2 attempts</b> to recover from a malformed model response
+            最多 <b>2 次尝试</b>从异常模型输出中恢复
           </li>
           <li>
-            <b>0 replies</b> sent without human approval
+            未经人工审核发送的回复：<b>0</b>
           </li>
         </ul>
       </section>
 
       <section className="auth-panel">
         <form className="auth-form" onSubmit={submit}>
-          <h2>Sign in</h2>
+          <h2>登录</h2>
 
           <label>
-            Email address
+            邮箱地址
             <input
               required
               type="email"
@@ -97,7 +99,7 @@ export default function LoginPage() {
           </label>
 
           <label>
-            Password
+            密码
             <input
               required
               type="password"
@@ -112,22 +114,21 @@ export default function LoginPage() {
 
           <button className="primary auth-primary" disabled={pending}>
             {pending ? <Loader2 size={15} className="spin" /> : null}
-            Sign in
+            登录
             {!pending && <ArrowRight size={15} />}
           </button>
 
           <div className="auth-divider">
-            <span>or</span>
+            <span>或</span>
           </div>
 
           <button type="button" className="ghost auth-primary" onClick={openDemo} disabled={demoPending}>
             {demoPending ? <Loader2 size={15} className="spin" /> : <Inbox size={15} />}
-            {demoPending ? "Filling your inbox…" : "Open a demo inbox"}
+            {demoPending ? "正在准备工单…" : "直接体验演示"}
           </button>
 
           <p className="control-note">
-            Twelve real-looking tickets in a workspace of your own. Triage them, break them, spend a
-            fraction of a cent. It disappears after a day.
+            自动创建包含 12 张示例工单的独立空间，可体验分类、故障恢复和成本统计，24 小时后自动清理。
           </p>
         </form>
       </section>

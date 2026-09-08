@@ -30,33 +30,33 @@ type Step = {
 const STEPS: Step[] = [
   {
     anchor: "queue",
-    title: "Twelve tickets, none of them read",
-    body: "This inbox is yours alone and disappears after a day. Classify them one at a time below, or press Triage to work the whole queue.",
+    title: "12 张尚未阅读的工单",
+    body: "这是您的独立演示空间，24 小时后自动清理。可以逐张分类，也可以一次处理全部待分类工单。",
   },
   {
     anchor: "classify",
-    title: "Classify one and watch it happen",
-    body: "The model's JSON streams in token by token, then the category, priority and confidence land underneath it.",
+    title: "观察一次实时分类",
+    body: "模型生成的 JSON 会逐字流式显示，完成后展示类别、优先级和置信度。",
   },
   {
     anchor: "fault",
-    title: "Now break it on purpose",
-    body: "Corrupt the model's JSON and the first attempt fails with the real parser error, then it is re-asked with the complaint attached and recovers. Rate-limit it and the backoff obeys the provider.",
+    title: "主动模拟异常",
+    body: "模拟 JSON 损坏时，首次解析会真实失败，系统携带错误信息重新请求并恢复；模拟限流时则按服务商规则退避重试。",
   },
   {
     anchor: "cache",
-    title: "Classify the same ticket twice",
-    body: "The second run is served from cache at no cost. Tick Skip cache to pay again and compare.",
+    title: "同一工单再次分类",
+    body: "第二次运行会命中缓存，成本为零；勾选“跳过缓存”可重新调用并对比。",
   },
   {
     anchor: "draft",
-    title: "Nothing is sent without you",
-    body: "Draft a reply, edit it however you like, then approve. What gets stored is your text, not the model's.",
+    title: "人工审核后才生效",
+    body: "生成回复后可以任意修改，再点击审核通过。系统保存的是您修改后的文字，不是模型原文。",
   },
   {
     anchor: "meter",
-    title: "The bill, as it happens",
-    body: "Every call is recorded in millionths of a dollar and summed here — retries and failures included, because a cost panel without them is lying.",
+    title: "实时查看调用成本",
+    body: "每次调用按百万分之一美元记录并汇总，重试和失败也会计入，让成本数据可核验。",
   },
 ];
 
@@ -149,9 +149,9 @@ export function Tour({ onFinished }: { onFinished?: () => void }) {
       <div className="tour-card" ref={cardRef} tabIndex={-1} style={cardPosition(rect)}>
         <div className="tour-card-head">
           <span className="label">
-            Step {index + 1} of {STEPS.length}
+            第 {index + 1} 步，共 {STEPS.length} 步
           </span>
-          <button className="ghost tour-skip" onClick={finish} aria-label="Skip the walkthrough">
+          <button className="ghost tour-skip" onClick={finish} aria-label="跳过使用引导">
             <X size={14} />
           </button>
         </div>
@@ -166,10 +166,10 @@ export function Tour({ onFinished }: { onFinished?: () => void }) {
             disabled={index === 0}
           >
             <ChevronLeft size={14} />
-            Back
+            上一步
           </button>
           <button className="primary" onClick={next}>
-            {last ? "Start triaging" : "Next"}
+            {last ? "开始体验" : "下一步"}
             {!last && <ChevronRight size={14} />}
           </button>
         </div>

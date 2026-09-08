@@ -1,18 +1,11 @@
 import type { Metadata } from "next";
-import { Archivo, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 
-// Archivo is slightly condensed and industrial, which suits a console that has
-// to fit a queue on one screen. JetBrains Mono carries every number, timing and
-// log line — a triage run is read like a trace, and a trace wants fixed widths.
-const sans = Archivo({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
-
 export const metadata: Metadata = {
-  title: "Frontdesk — AI triage for support inboxes",
+  title: "Frontdesk｜AI 智能工单分流",
   description:
-    "Classifies incoming support tickets, drafts replies for a human to approve, and shows what every model call cost.",
+    "自动分类客服工单、判断优先级、生成待人工审核的回复草稿，并记录每次模型调用成本。",
   // Chrome offers to translate an English page for a visitor whose browser is
   // set to another language, and its translator rewrites text nodes into
   // <font> wrappers of its own. React then updates a tree whose nodes it no
@@ -25,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" translate="no" className={`${sans.variable} ${mono.variable} notranslate`}>
+    <html lang="zh-CN" translate="no" className="notranslate">
       <body>
         <Providers>{children}</Providers>
       </body>

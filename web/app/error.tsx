@@ -25,15 +25,14 @@ export default function ConsoleError({
 
   return (
     <div className="boot">
-      <h1 style={{ fontSize: 18, margin: 0 }}>Something broke in the console.</h1>
+      <h1 style={{ fontSize: 18, margin: 0 }}>工作台暂时出现异常</h1>
       <p style={{ color: "var(--text-dim)", maxWidth: 460, textAlign: "center" }}>
-        Your workspace and everything in it is safe on the server — this went wrong in the browser. Reloading
-        picks up where you left off.
+        工作空间与数据仍安全保存在服务器，重新加载即可从当前位置继续。
       </p>
 
       <button className="primary" onClick={reset}>
         <RotateCw size={14} />
-        Try again
+        重新尝试
       </button>
 
       {error.digest && (

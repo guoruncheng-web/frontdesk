@@ -13,6 +13,8 @@
    ========================================================================= */
 
 :root {
+  --font-sans: "PingFang SC", "Microsoft YaHei", ui-sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, ui-monospace;
   --ground: #0f1419;
   --surface: #161c23;
   --raised: #1e262f;
@@ -48,6 +50,15 @@
   --s6: 32px;
   --s7: 48px;
 }
+
+.language-link {
+  color: var(--text-dim);
+  font-size: 12px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.language-link:hover { color: var(--accent); }
 
 * {
   box-sizing: border-box;

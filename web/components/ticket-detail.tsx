@@ -8,9 +8,9 @@ import { PromptOption, TicketDetail, Usage, api, dollars, streamEvents } from "@
 type Attempt = { attempt: number; outcome: string; error?: string; delayMs?: number };
 
 const FAULTS = [
-  { value: "none", label: "No fault" },
-  { value: "malformed_output", label: "Corrupt the model’s JSON" },
-  { value: "rate_limit", label: "Rate-limit the first attempt" },
+  { value: "none", label: "不注入故障" },
+  { value: "malformed_output", label: "模拟模型 JSON 损坏" },
+  { value: "rate_limit", label: "模拟首次请求限流" },
 ];
 
 export function TicketDetailPanel({
@@ -75,7 +75,7 @@ export function TicketDetailPanel({
         onFailed: setFailure,
       });
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The run failed");
+      setFailure(error instanceof Error ? error.message : "分类失败");
     } finally {
       setRunning(null);
       await ticket.refetch();
@@ -96,7 +96,7 @@ export function TicketDetailPanel({
       });
       setApproved(false);
     } catch (error) {
-      setFailure(error instanceof Error ? error.message : "The draft failed");
+      setFailure(error instanceof Error ? error.message : "生成草稿失败");
     } finally {
       setRunning(null);
       onChanged();
@@ -127,7 +127,7 @@ export function TicketDetailPanel({
   return (
     <>
       <header className="detail-head">
-        <p className="label">{data.channel} · received {new Date(data.receivedAt).toLocaleString()}</p>
+        <p className="label">{data.channel} · 收到于 {new Date(data.receivedAt).toLocaleString("zh-CN")}</p>
         <h1>{data.subject}</h1>
         <p className="detail-from">
           {data.senderName} &lt;{data.senderEmail}&gt;
@@ -136,7 +136,7 @@ export function TicketDetailPanel({
 
       <section className="panel">
         <div className="panel-head">
-          <span className="label">Message</span>
+          <span className="label">客户消息</span>
         </div>
         <div className="panel-body">
           <p className="ticket-body">{data.body}</p>
@@ -145,14 +145,14 @@ export function TicketDetailPanel({
 
       <section className="panel">
         <div className="panel-head">
-          <span className="label">Triage</span>
+          <span className="label">智能分流</span>
         </div>
         <div className="panel-body">
           <div className="controls">
-            <select value={promptVersion} onChange={(e) => setPromptVersion(e.target.value)} aria-label="Prompt version">
+            <select value={promptVersion} onChange={(e) => setPromptVersion(e.target.value)} aria-label="提示词版本">
               {(prompts.data ?? []).map((prompt) => (
                 <option key={prompt.version} value={prompt.version}>
-                  Prompt {prompt.version} — {prompt.label}
+                  提示词 {prompt.version} — {prompt.label}
                 </option>
               ))}
             </select>
@@ -160,7 +160,7 @@ export function TicketDetailPanel({
             <select
               value={fault}
               onChange={(e) => setFault(e.target.value)}
-              aria-label="Inject a fault"
+              aria-label="注入故障"
               data-tour="fault"
             >
               {FAULTS.map((option) => (
@@ -177,7 +177,7 @@ export function TicketDetailPanel({
                 onChange={(e) => setNoCache(e.target.checked)}
                 style={{ margin: 0 }}
               />
-              Skip cache
+              跳过缓存
             </label>
 
             <button
@@ -187,7 +187,7 @@ export function TicketDetailPanel({
               data-tour="classify"
             >
               {running === "triage" ? <Loader2 size={14} className="spin" /> : <Zap size={14} />}
-              {running === "triage" ? "Classifying…" : "Classify"}
+              {running === "triage" ? "分类中…" : "开始分类"}
             </button>
 
             {selectedPrompt && <p className="control-note">{selectedPrompt.note}</p>}
@@ -209,7 +209,7 @@ export function TicketDetailPanel({
                     {attempt.error && <span className="step-detail"> — {attempt.error}</span>}
                   </span>
                   {attempt.delayMs !== undefined && (
-                    <span className="step-wait">retry in {attempt.delayMs}ms</span>
+                    <span className="step-wait">{attempt.delayMs}ms 后重试</span>
                   )}
                 </div>
               ))}
@@ -221,22 +221,22 @@ export function TicketDetailPanel({
           {triage && (
             <dl className="verdict" style={{ marginTop: 16 }}>
               <div>
-                <dt className="label">Category</dt>
-                <dd>{triage.category}</dd>
+                <dt className="label">类别</dt>
+                <dd>{categoryLabel(triage.category)}</dd>
               </div>
               <div>
-                <dt className="label">Priority</dt>
-                <dd className={triage.priority}>{triage.priority}</dd>
+                <dt className="label">优先级</dt>
+                <dd className={triage.priority}>{priorityLabel(triage.priority)}</dd>
               </div>
               <div>
-                <dt className="label">Confidence</dt>
+                <dt className="label">置信度</dt>
                 <dd>{triage.confidence.toFixed(2)}</dd>
                 <div className="confidence-bar">
                   <i className={shaky ? "shaky" : ""} style={{ width: `${triage.confidence * 100}%` }} />
                 </div>
               </div>
               <div>
-                <dt className="label">Attempts</dt>
+                <dt className="label">尝试次数</dt>
                 <dd>{triage.attempts}</dd>
               </div>
             </dl>
@@ -246,7 +246,7 @@ export function TicketDetailPanel({
 
           {shaky && triage && (
             <p className="control-note" style={{ marginTop: 12 }}>
-              Below 0.80 the model is guessing. This one is flagged for a human rather than acted on.
+              置信度低于 0.80，系统会标记为人工复核，不会直接执行。
             </p>
           )}
         </div>
@@ -254,14 +254,14 @@ export function TicketDetailPanel({
 
       <section className="panel">
         <div className="panel-head">
-          <span className="label">Reply draft</span>
-          {approved && <span className="chip low">approved</span>}
+          <span className="label">回复草稿</span>
+          {approved && <span className="chip low">已审核</span>}
         </div>
         <div className="panel-body">
           <textarea
             className="draft"
             value={draft}
-            placeholder="No draft yet."
+            placeholder="暂未生成草稿。"
             onChange={(event) => {
               draftDirty.current = true;
               setDraft(event.target.value);
@@ -271,14 +271,14 @@ export function TicketDetailPanel({
           <div className="draft-actions" data-tour="draft">
             <button className="ghost" onClick={runDraft} disabled={running !== null}>
               {running === "draft" ? <Loader2 size={14} className="spin" /> : <PenLine size={14} />}
-              {draft ? "Rewrite" : "Draft a reply"}
+              {draft ? "重新生成" : "生成回复草稿"}
             </button>
             <button className="primary" onClick={approve} disabled={!draft.trim() || running !== null}>
               <Check size={14} />
-              Approve
+              审核通过
             </button>
             <p className="draft-note">
-              Approving stores the text as you edited it — not the model’s original.
+              审核后保存的是您修改过的内容，而不是模型的原始输出。
             </p>
           </div>
         </div>
@@ -287,19 +287,19 @@ export function TicketDetailPanel({
       {data.calls.length > 0 && (
         <section className="panel">
           <div className="panel-head">
-            <span className="label">Model calls for this ticket</span>
+            <span className="label">本工单的模型调用记录</span>
           </div>
           <div className="panel-body">
             <table className="calls">
               <thead>
                 <tr>
-                  <th>Purpose</th>
-                  <th>Try</th>
-                  <th>Outcome</th>
-                  <th>Prompt</th>
-                  <th>Tokens</th>
-                  <th>Cost</th>
-                  <th>Latency</th>
+                  <th>用途</th>
+                  <th>次数</th>
+                  <th>结果</th>
+                  <th>提示词</th>
+                  <th>Token</th>
+                  <th>成本</th>
+                  <th>耗时</th>
                 </tr>
               </thead>
               <tbody>
@@ -327,39 +327,45 @@ export function TicketDetailPanel({
       {usage && (
         <section className="panel">
           <div className="panel-head">
-            <span className="label">Workspace usage</span>
+            <span className="label">工作空间用量</span>
           </div>
           <div className="panel-body">
             <dl className="usage">
               <div>
-                <dt className="label">Spent</dt>
+                <dt className="label">实际支出</dt>
                 <dd>{dollars(usage.spentMicros)}</dd>
               </div>
               <div>
-                <dt className="label">Saved by cache</dt>
+                <dt className="label">缓存节省</dt>
                 <dd className="saved">{dollars(usage.savedMicros)}</dd>
               </div>
               <div>
-                <dt className="label">Calls</dt>
+                <dt className="label">调用次数</dt>
                 <dd>{usage.calls}</dd>
               </div>
               <div>
-                <dt className="label">Retries</dt>
+                <dt className="label">重试次数</dt>
                 <dd>{usage.retries}</dd>
               </div>
               <div>
-                <dt className="label">Failures</dt>
+                <dt className="label">失败次数</dt>
                 <dd>{usage.failures}</dd>
               </div>
             </dl>
             <p className="usage-note">
-              Cost is recorded per call in millionths of a dollar and summed here — not estimated from
-              an average. A cache hit is stored at zero, which is what makes the saving real rather
-              than a claim.
+              每次调用都以百万分之一美元为单位记录并汇总，不使用平均值估算；命中缓存的调用成本记为零。
             </p>
           </div>
         </section>
       )}
     </>
   );
+}
+
+function categoryLabel(value: string): string {
+  return ({ billing: "账单", technical: "技术问题", shipping: "物流", returns: "退换货", account: "账号", feedback: "反馈", sales: "销售咨询", other: "其他" } as Record<string, string>)[value] ?? value;
+}
+
+function priorityLabel(value: string): string {
+  return ({ urgent: "紧急", normal: "普通", low: "低" } as Record<string, string>)[value] ?? value;
 }

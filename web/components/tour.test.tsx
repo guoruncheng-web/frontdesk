@@ -16,7 +16,7 @@ describe("shouldOfferTour", () => {
     const onFinished = vi.fn();
     render(<Tour onFinished={onFinished} />);
 
-    await userEvent.click(screen.getByRole("button", { name: "Skip the walkthrough" }));
+    await userEvent.click(screen.getByRole("button", { name: "跳过使用引导" }));
 
     expect(onFinished).toHaveBeenCalled();
     expect(shouldOfferTour()).toBe(false);
@@ -27,14 +27,14 @@ describe("Tour", () => {
   it("walks forward and back through the steps", async () => {
     render(<Tour />);
 
-    expect(screen.getByText("Step 1 of 6")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Back/ })).toBeDisabled();
+    expect(screen.getByText("第 1 步，共 6 步")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /上一步/ })).toBeDisabled();
 
-    await userEvent.click(screen.getByRole("button", { name: /Next/ }));
-    expect(screen.getByText("Step 2 of 6")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /下一步/ }));
+    expect(screen.getByText("第 2 步，共 6 步")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: /Back/ }));
-    expect(screen.getByText("Step 1 of 6")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /上一步/ }));
+    expect(screen.getByText("第 1 步，共 6 步")).toBeInTheDocument();
   });
 
   it("finishes on the last step rather than running off the end", async () => {
@@ -42,10 +42,10 @@ describe("Tour", () => {
     render(<Tour onFinished={onFinished} />);
 
     for (let step = 1; step < 6; step += 1) {
-      await userEvent.click(screen.getByRole("button", { name: /Next/ }));
+      await userEvent.click(screen.getByRole("button", { name: /下一步/ }));
     }
 
-    const last = screen.getByRole("button", { name: /Start triaging/ });
+    const last = screen.getByRole("button", { name: /开始体验/ });
     await userEvent.click(last);
 
     expect(onFinished).toHaveBeenCalledOnce();
